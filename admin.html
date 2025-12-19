@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>管理 — 数据库编辑</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Chart.js (保留以便未来扩展) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body { background: #f7f7fb; font-family: "Segoe UI", sans-serif; margin: 0; }
+    /* 统一使用粉色头部 (和 index.html 保持一致) */
+    .header { background: #ffeef3; padding: 18px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 18px; }
+    .card-section { background: #fff; padding: 16px; border-radius: 8px; }
+    .btn-pink { background-color: #ff7aa2; color: #fff; border: none; }
+    .table-wrapper { max-height: 420px; overflow:auto; }
+    .small-muted { font-size:0.85rem; color:#666; }
+    .form-inline-group { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .modal-body .row > [class*="col-"] { margin-bottom: 8px; }
+    .danger-txt { color: #d9534f; }
+    .nav-footer { text-align:center; margin:18px 0; }
+    .nav-footer .btn-outline-primary { border-color:#ffb6c1; color:#ff4d7a; }
+    .nav-footer .btn-outline-primary:hover { background:#ffb6c1; color:#fff; border-color:#ffb6c1; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h3>数据库管理面板（编辑 / 删除 / 新增）</h3>
+    <div class="small-muted">谨慎操作：删除是不可逆的。建议在生产库操作前备份。</div>
+  </div>
+
+  <div class="container-xl">
+    <div class="row g-3">
+      <!-- Goals 管理 -->
+      <div class="col-12 col-lg-6">
+        <div class="card-section">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5>Goals</h5>
+            <div>
+              <button id="refreshGoalsBtn" class="btn btn-sm btn-outline-secondary">刷新</button>
+              <button id="createGoalBtn" class="btn btn-sm btn-pink">新增 Goal</button>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>ID</th><th>标题</th><th>周期</th><th>所属周一</th><th>状态</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="goalsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reminders 管理 -->
+      <div class="col-12 col-lg-6">
+        <div class="card-section">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5>Life Reminders</h5>
+            <div>
+              <button id="refreshRemindersBtn" class="btn btn-sm btn-outline-secondary">刷新</button>
+              <button id="createReminderBtn" class="btn btn-sm btn-pink">新增 Reminder</button>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>ID</th><th>标题</th><th>间隔</th><th>下次日期</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="remindersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly Scores 管理 -->
+      <div class="col-12">
+        <div class="card-section mt-2">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5>Weekly Scores</h5>
+            <div>
+              <button id="refreshScoresBtn" class="btn btn-sm btn-outline-secondary">刷新</button>
+              <button id="createScoreBtn" class="btn btn-sm btn-pink">新增 Score</button>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>ID</th><th>周一</th><th>健康</th><th>内核</th><th>睡眠</th><th>饮食</th><th>目标</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="scoresTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 底部导航：跳回主页面 -->
+  <div class="nav-footer">
+    <a href="index.html" class="btn btn-outline-primary btn-sm">返回 主页面</a>
+  </div>
+
+  <!-- 编辑/新增 Modal（统一复用） -->
+  <div class="modal" tabindex="-1" id="editModal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalTitle">编辑</h5>
+          <button type="button" class="btn-close" id="closeModalBtn"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editForm">
+            <!-- dynamic content injected here -->
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" id="cancelEditBtn">取消</button>
+          <button class="btn btn-danger" id="deleteItemBtn" style="display:none">删除</button>
+          <button class="btn btn-pink" id="saveItemBtn">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+/* 管理页面脚本（对 goals / life_reminders / weekly_scores 提供 列表/新增/编辑/删除） */
+const SUPABASE_URL = 'https://daraqvkuzmgsvtwtahom.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhcmFxdmt1em1nc3Z0d3RhaG9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4OTI2ODUsImV4cCI6MjA4MTQ2ODY4NX0.1qYG91KhDNVj2n3ageDFlkZUh5nfyY6tycKdA3g00D0';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* 简单的 DOM/Modal helper （不依赖 Bootstrap JS） */
+const editModal = document.getElementById('editModal');
+const editForm = document.getElementById('editForm');
+const editModalTitle = document.getElementById('editModalTitle');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const cancelEditBtn = document.getElementById('cancelEditBtn');
+const deleteItemBtn = document.getElementById('deleteItemBtn');
+const saveItemBtn = document.getElementById('saveItemBtn');
+
+// 当前编辑实体上下文
+let currentEntity = null; // 'goals' | 'life_reminders' | 'weekly_scores'
+let currentItem = null;   // item object or null (for create)
+
+function showModal(){
+  editModal.style.display = 'block';
+}
+function hideModal(){
+  editModal.style.display = 'none';
+  editForm.innerHTML = '';
+  currentEntity = null; currentItem = null;
+  deleteItemBtn.style.display = 'none';
+}
+
+/* 转义 HTML 用于显示 */
+function esc(str){ return (str===null || str===undefined) ? '' : String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ------------------- Goals ------------------- */
+async function loadGoals(){
+  const { data, error } = await supabaseClient.from('goals').select('*').order('id', {ascending:true});
+  const tbody = document.getElementById('goalsTableBody'); tbody.innerHTML = '';
+  if (error) { console.error(error); return; }
+  data.forEach(g=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${g.id}</td>
+      <td>${esc(g.title)}</td>
+      <td>${esc(g.period)}</td>
+      <td>${g.target_week_start || ''}</td>
+      <td>${esc(g.status)}</td>
+      <td>
+        <div class="form-inline-group">
+          <button class="btn btn-sm btn-outline-primary" data-action="edit" data-id="${g.id}">编辑</button>
+          <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${g.id}">删除</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* Goals: open 编辑/新增 表单 */
+function openGoalEditor(item){
+  currentEntity = 'goals';
+  currentItem = item || null;
+  editModalTitle.textContent = item ? `编辑 Goal #${item.id}` : '新增 Goal';
+  deleteItemBtn.style.display = item ? 'inline-block' : 'none';
+
+  // 构建表单字段
+  editForm.innerHTML = `
+    <input type="hidden" name="id" value="${item ? item.id : ''}">
+    <div class="row">
+      <div class="col-12 col-md-6"><label class="form-label">标题</label><input class="form-control" name="title" value="${item ? esc(item.title) : ''}" required></div>
+      <div class="col-12 col-md-6"><label class="form-label">周期 (period)</label>
+        <select class="form-select" name="period">
+          <option value="week">week</option>
+          <option value="month">month</option>
+          <option value="year">year</option>
+          <option value="longterm">longterm</option>
+        </select>
+      </div>
+      <div class="col-12"><label class="form-label">描述 (description)</label><textarea class="form-control" name="description">${item ? esc(item.description) : ''}</textarea></div>
+      <div class="col-12 col-md-4"><label class="form-label">目标日期 (target_date)</label><input type="date" class="form-control" name="target_date" value="${item && item.target_date ? item.target_date : ''}"></div>
+      <div class="col-12 col-md-4"><label class="form-label">所属周一 (target_week_start)</label><input type="date" class="form-control" name="target_week_start" value="${item && item.target_week_start ? item.target_week_start : ''}"></div>
+      <div class="col-12 col-md-4"><label class="form-label">状态</label>
+        <select class="form-select" name="status">
+          <option value="pending">pending</option>
+          <option value="achieved">achieved</option>
+          <option value="failed">failed</option>
+        </select>
+      </div>
+    </div>
+  `;
+  // 设置 selects 的选中项
+  if (item) {
+    editForm.querySelector('[name="period"]').value = item.period;
+    editForm.querySelector('[name="status"]').value = item.status;
+  }
+  showModal();
+}
+
+/* Goals: 保存（创建或更新） */
+async function saveGoal(){
+  const form = new FormData(editForm);
+  const payload = {
+    title: form.get('title')?.trim(),
+    description: form.get('description')?.trim() || null,
+    period: form.get('period'),
+    target_date: form.get('target_date') || null,
+    target_week_start: form.get('target_week_start') || null,
+    status: form.get('status')
+  };
+  if (!payload.title) { alert('标题不能为空'); return; }
+
+  if (currentItem) {
+    // update
+    const { error } = await supabaseClient.from('goals').update(payload).eq('id', currentItem.id);
+    if (error) { alert('更新失败: ' + error.message); console.error(error); return; }
+  } else {
+    // insert
+    const { error } = await supabaseClient.from('goals').insert(payload);
+    if (error) { alert('新增失败: ' + error.message); console.error(error); return; }
+  }
+  await loadGoals();
+  hideModal();
+}
+
+/* Goals: 删除 */
+async function deleteGoal(){
+  if (!currentItem) return;
+  if (!confirm(`确定删除 Goal #${currentItem.id} ? 此操作不可逆。`)) return;
+  const { error } = await supabaseClient.from('goals').delete().eq('id', currentItem.id);
+  if (error) { alert('删除失败: ' + error.message); console.error(error); return; }
+  await loadGoals();
+  hideModal();
+}
+
+/* ------------------- Reminders ------------------- */
+async function loadReminders(){
+  const { data, error } = await supabaseClient.from('life_reminders').select('*').order('id', {ascending:true});
+  const tbody = document.getElementById('remindersTableBody'); tbody.innerHTML = '';
+  if (error) { console.error(error); return; }
+  data.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.id}</td>
+      <td>${esc(r.title)}</td>
+      <td>${r.interval_value} ${esc(r.interval_unit)}</td>
+      <td>${r.next_due_date}</td>
+      <td>
+        <div class="form-inline-group">
+          <button class="btn btn-sm btn-outline-primary" data-action="edit-rem" data-id="${r.id}">编辑</button>
+          <button class="btn btn-sm btn-outline-danger" data-action="delete-rem" data-id="${r.id}">删除</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function openReminderEditor(item){
+  currentEntity = 'life_reminders';
+  currentItem = item || null;
+  editModalTitle.textContent = item ? `编辑 Reminder #${item.id}` : '新增 Reminder';
+  deleteItemBtn.style.display = item ? 'inline-block' : 'none';
+
+  editForm.innerHTML = `
+    <input type="hidden" name="id" value="${item ? item.id : ''}">
+    <div class="row">
+      <div class="col-12 col-md-6"><label class="form-label">标题</label><input class="form-control" name="title" value="${item ? esc(item.title) : ''}" required></div>
+      <div class="col-12 col-md-2"><label class="form-label">间隔值</label><input type="number" min="1" class="form-control" name="interval_value" value="${item ? esc(item.interval_value) : ''}" required></div>
+      <div class="col-12 col-md-4"><label class="form-label">间隔单位</label>
+        <select class="form-select" name="interval_unit">
+          <option value="day">day</option>
+          <option value="week">week</option>
+          <option value="month">month</option>
+          <option value="year">year</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-4"><label class="form-label">下次日期</label><input type="date" class="form-control" name="next_due_date" value="${item && item.next_due_date ? item.next_due_date : ''}"></div>
+      <div class="col-12"><label class="form-label">备注</label><textarea class="form-control" name="notes">${item ? esc(item.notes) : ''}</textarea></div>
+    </div>
+  `;
+  if (item) editForm.querySelector('[name="interval_unit"]').value = item.interval_unit;
+  showModal();
+}
+
+async function saveReminder(){
+  const form = new FormData(editForm);
+  const payload = {
+    title: form.get('title')?.trim(),
+    interval_value: parseInt(form.get('interval_value')),
+    interval_unit: form.get('interval_unit'),
+    next_due_date: form.get('next_due_date') || null,
+    notes: form.get('notes')?.trim() || null
+  };
+  if (!payload.title || isNaN(payload.interval_value) || payload.interval_value <= 0) { alert('请输入有效字段'); return; }
+
+  if (currentItem) {
+    const { error } = await supabaseClient.from('life_reminders').update(payload).eq('id', currentItem.id);
+    if (error) { alert('更新失败: ' + error.message); console.error(error); return; }
+  } else {
+    const { error } = await supabaseClient.from('life_reminders').insert(payload);
+    if (error) { alert('新增失败: ' + error.message); console.error(error); return; }
+  }
+  await loadReminders();
+  hideModal();
+}
+
+async function deleteReminder(){
+  if (!currentItem) return;
+  if (!confirm(`确定删除 Reminder #${currentItem.id} ?`)) return;
+  const { error } = await supabaseClient.from('life_reminders').delete().eq('id', currentItem.id);
+  if (error) { alert('删除失败: ' + error.message); console.error(error); return; }
+  await loadReminders();
+  hideModal();
+}
+
+/* ------------------- Weekly Scores ------------------- */
+async function loadScores(){
+  const { data, error } = await supabaseClient.from('weekly_scores').select('*').order('week_start',{ascending:false});
+  const tbody = document.getElementById('scoresTableBody'); tbody.innerHTML = '';
+  if (error) { console.error(error); return; }
+  data.forEach(s=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${s.id}</td>
+      <td>${s.week_start}</td>
+      <td>${s.health_score}</td>
+      <td>${s.core_score}</td>
+      <td>${s.sleep_score}</td>
+      <td>${s.diet_score}</td>
+      <td>${s.goal_score}</td>
+      <td>
+        <div class="form-inline-group">
+          <button class="btn btn-sm btn-outline-primary" data-action="edit-score" data-id="${s.id}">编辑</button>
+          <button class="btn btn-sm btn-outline-danger" data-action="delete-score" data-id="${s.id}">删除</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function openScoreEditor(item){
+  currentEntity = 'weekly_scores';
+  currentItem = item || null;
+  editModalTitle.textContent = item ? `编辑 Score #${item.id}` : '新增 Score';
+  deleteItemBtn.style.display = item ? 'inline-block' : 'none';
+
+  editForm.innerHTML = `
+    <input type="hidden" name="id" value="${item ? item.id : ''}">
+    <div class="row">
+      <div class="col-12 col-md-3"><label class="form-label">周一 (week_start)</label><input type="date" class="form-control" name="week_start" value="${item && item.week_start ? item.week_start : ''}" required></div>
+      <div class="col-6 col-md-2"><label class="form-label">健康</label><input type="number" min="1" max="5" class="form-control" name="health_score" value="${item ? esc(item.health_score) : 3}" required></div>
+      <div class="col-6 col-md-2"><label class="form-label">内核</label><input type="number" min="1" max="5" class="form-control" name="core_score" value="${item ? esc(item.core_score) : 3}" required></div>
+      <div class="col-6 col-md-2"><label class="form-label">睡眠</label><input type="number" min="1" max="5" class="form-control" name="sleep_score" value="${item ? esc(item.sleep_score) : 3}" required></div>
+      <div class="col-6 col-md-2"><label class="form-label">饮食</label><input type="number" min="1" max="5" class="form-control" name="diet_score" value="${item ? esc(item.diet_score) : 3}" required></div>
+      <div class="col-6 col-md-2"><label class="form-label">目标</label><input type="number" min="1" max="5" class="form-control" name="goal_score" value="${item ? esc(item.goal_score) : 3}" required></div>
+      <div class="col-12 col-md-2"><label class="form-label">经期</label><select class="form-select" name="menstruation"><option value="false">false</option><option value="true">true</option></select></div>
+      <div class="col-12"><label class="form-label">备注</label><textarea class="form-control" name="notes">${item ? esc(item.notes) : ''}</textarea></div>
+    </div>
+  `;
+  if (item) editForm.querySelector('[name="menstruation"]').value = String(!!item.menstruation);
+  showModal();
+}
+
+async function saveScore(){
+  const form = new FormData(editForm);
+  const payload = {
+    week_start: form.get('week_start'),
+    health_score: parseInt(form.get('health_score')),
+    core_score: parseInt(form.get('core_score')),
+    sleep_score: parseInt(form.get('sleep_score')),
+    diet_score: parseInt(form.get('diet_score')),
+    goal_score: parseInt(form.get('goal_score')),
+    menstruation: form.get('menstruation') === 'true',
+    notes: form.get('notes')?.trim() || null
+  };
+  // basic validation
+  if (!payload.week_start) { alert('week_start 必填'); return; }
+  const numericFields = ['health_score','core_score','sleep_score','diet_score','goal_score'];
+  for (const f of numericFields) {
+    if (isNaN(payload[f]) || payload[f] < 1 || payload[f] > 5) { alert('评分字段必须在 1-5 之间'); return; }
+  }
+
+  if (currentItem) {
+    const { error } = await supabaseClient.from('weekly_scores').update(payload).eq('id', currentItem.id);
+    if (error) { alert('更新失败: ' + error.message); console.error(error); return; }
+  } else {
+    // insert — weekly_scores.week_start 是 UNIQUE，在插入前可考虑检查是否已存在
+    const { error } = await supabaseClient.from('weekly_scores').insert(payload);
+    if (error) { alert('新增失败: ' + error.message); console.error(error); return; }
+  }
+  await loadScores();
+  hideModal();
+}
+
+async function deleteScore(){
+  if (!currentItem) return;
+  if (!confirm(`确定删除 Score #${currentItem.id} ?`)) return;
+  const { error } = await supabaseClient.from('weekly_scores').delete().eq('id', currentItem.id);
+  if (error) { alert('删除失败: ' + error.message); console.error(error); return; }
+  await loadScores();
+  hideModal();
+}
+
+/* ------------------- 事件委托（列表按钮） ------------------- */
+document.addEventListener('click', async (e)=>{
+  const el = e.target;
+  // Goals
+  if (el.matches('[data-action="edit"]')) {
+    const id = el.getAttribute('data-id');
+    const { data } = await supabaseClient.from('goals').select('*').eq('id', id).single();
+    openGoalEditor(data);
+  } else if (el.matches('[data-action="delete"]')) {
+    const id = el.getAttribute('data-id');
+    const { data } = await supabaseClient.from('goals').select('*').eq('id', id).single();
+    openGoalEditor(data);
+    // trigger delete flow in modal (user must confirm)
+  }
+
+  // Reminders
+  else if (el.matches('[data-action="edit-rem"]')) {
+    const id = el.getAttribute('data-id');
+    const { data } = await supabaseClient.from('life_reminders').select('*').eq('id', id).single();
+    openReminderEditor(data);
+  } else if (el.matches('[data-action="delete-rem"]')) {
+    const id = el.getAttribute('data-id');
+    const { data } = await supabaseClient.from('life_reminders').select('*').eq('id', id).single();
+    openReminderEditor(data);
+  }
+
+  // Scores
+  else if (el.matches('[data-action="edit-score"]')) {
+    const id = el.getAttribute('data-id');
+    const { data } = await supabaseClient.from('weekly_scores').select('*').eq('id', id).single();
+    openScoreEditor(data);
+  } else if (el.matches('[data-action="delete-score"]')) {
+    const id = el.getAttribute('data-id');
+    const { data } = await supabaseClient.from('weekly_scores').select('*').eq('id', id).single();
+    openScoreEditor(data);
+  }
+});
+
+/* ------------------- Modal 控件 ------------------- */
+closeModalBtn.addEventListener('click', hideModal);
+cancelEditBtn.addEventListener('click', hideModal);
+
+// 删除按钮在 modal 中，根据 currentEntity 调用相应删除方法
+deleteItemBtn.addEventListener('click', async ()=>{
+  if (!currentEntity || !currentItem) return;
+  if (currentEntity === 'goals') await deleteGoal();
+  else if (currentEntity === 'life_reminders') await deleteReminder();
+  else if (currentEntity === 'weekly_scores') await deleteScore();
+});
+
+// 保存按钮（根据实体）
+saveItemBtn.addEventListener('click', async ()=>{
+  if (!currentEntity) return;
+  if (currentEntity === 'goals') await saveGoal();
+  else if (currentEntity === 'life_reminders') await saveReminder();
+  else if (currentEntity === 'weekly_scores') await saveScore();
+});
+
+/* ------------------- 顶部按钮（刷新/新增） ------------------- */
+document.getElementById('refreshGoalsBtn').addEventListener('click', loadGoals);
+document.getElementById('refreshRemindersBtn').addEventListener('click', loadReminders);
+document.getElementById('refreshScoresBtn').addEventListener('click', loadScores);
+
+document.getElementById('createGoalBtn').addEventListener('click', ()=> openGoalEditor(null));
+document.getElementById('createReminderBtn').addEventListener('click', ()=> openReminderEditor(null));
+document.getElementById('createScoreBtn').addEventListener('click', ()=> openScoreEditor(null));
+
+/* ------------------- 初始化 ------------------- */
+async function init(){
+  await Promise.all([ loadGoals(), loadReminders(), loadScores() ]);
+  // 隐藏 modal 初始
+  hideModal();
+}
+init();
+
+  </script>
+</body>
+</html>

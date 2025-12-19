@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>每周健康打分</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="header">
+    <h2 id="weekHeader">本周（Week YYYY-MM-DD）</h2>
+  </div>
+
+  <div class="container-xl py-3">
+    <div class="row g-3 mb-4">
+
+      <!-- 左侧目标 -->
+      <div class="col-12 col-lg-4 d-flex flex-column gap-3">
+        <div class="card-section">
+          <h4>① 本周目标</h4>
+          <ul id="currentWeekGoals" class="list-group mb-3"></ul>
+
+          <h5>下周目标</h5>
+          <ul id="nextWeekGoals" class="list-group mb-2"></ul>
+
+          <div class="d-flex mt-2">
+            <input type="text" id="newNextWeekGoal" class="form-control me-2" placeholder="+ 添加下周目标">
+            <button class="btn btn-pink" id="addNextWeekGoalBtn">添加</button>
+          </div>
+        </div>
+
+        <div class="card-section">
+          <h4>④ 长期目标</h4>
+          <ul id="longTermGoals" class="list-group"></ul>
+        </div>
+      </div>
+
+      <!-- 中间评分 -->
+      <div class="col-12 col-lg-5">
+        <div class="card-section">
+          <h4>② 本周状态 & 评分</h4>
+          <div class="score-wrapper">
+            <form id="weeklyScoreForm">
+              <div class="score-group">
+                <div class="score-title">健康</div>
+                <div class="score-options">
+                  <label><input type="radio" name="healthScore" value="1">1</label>
+                  <label><input type="radio" name="healthScore" value="2">2</label>
+                  <label><input type="radio" name="healthScore" value="3">3</label>
+                  <label><input type="radio" name="healthScore" value="4">4</label>
+                  <label><input type="radio" name="healthScore" value="5">5</label>
+                </div>
+              </div>
+              <div class="score-group">
+                <div class="score-title">内核</div>
+                <div class="score-options">
+                  <label><input type="radio" name="coreScore" value="1">1</label>
+                  <label><input type="radio" name="coreScore" value="2">2</label>
+                  <label><input type="radio" name="coreScore" value="3">3</label>
+                  <label><input type="radio" name="coreScore" value="4">4</label>
+                  <label><input type="radio" name="coreScore" value="5">5</label>
+                </div>
+              </div>
+              <div class="score-group">
+                <div class="score-title">睡眠</div>
+                <div class="score-options">
+                  <label><input type="radio" name="sleepScore" value="1">1</label>
+                  <label><input type="radio" name="sleepScore" value="2">2</label>
+                  <label><input type="radio" name="sleepScore" value="3">3</label>
+                  <label><input type="radio" name="sleepScore" value="4">4</label>
+                  <label><input type="radio" name="sleepScore" value="5">5</label>
+                </div>
+              </div>
+              <div class="score-group">
+                <div class="score-title">饮食</div>
+                <div class="score-options">
+                  <label><input type="radio" name="dietScore" value="1">1</label>
+                  <label><input type="radio" name="dietScore" value="2">2</label>
+                  <label><input type="radio" name="dietScore" value="3">3</label>
+                  <label><input type="radio" name="dietScore" value="4">4</label>
+                  <label><input type="radio" name="dietScore" value="5">5</label>
+                </div>
+              </div>
+              <div class="score-group">
+                <div class="score-title">目标</div>
+                <div class="score-options">
+                  <label><input type="radio" name="goalScore" value="1">1</label>
+                  <label><input type="radio" name="goalScore" value="2">2</label>
+                  <label><input type="radio" name="goalScore" value="3">3</label>
+                  <label><input type="radio" name="goalScore" value="4">4</label>
+                  <label><input type="radio" name="goalScore" value="5">5</label>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                <select id="weekSelect" class="form-select w-auto"></select>
+                <button class="btn btn-pink mt-2" type="submit">保存评分</button>
+              </div>
+            </form>
+          </div>
+
+          <canvas id="radarChart" class="mt-4"></canvas>
+        </div>
+      </div>
+
+      <!-- 右侧建议 + 提醒事项 -->
+      <div class="col-12 col-lg-3 d-flex flex-column gap-3">
+        <div class="card-section" id="adviceCard">
+          <!-- 大标题不再可折叠（移除折叠按钮），保持固定展示 -->
+          <div class="d-flex align-items-center" id="adviceHeader">
+            <h4 class="mb-0">⑤ 评分建议</h4>
+          </div>
+
+          <!-- 新增类 .advice-content 提供滚动条（超出高度时可滚动） -->
+          <div id="adviceContent" class="advice-content" style="margin-top:10px;">
+            <div class="advice-intro mb-2">
+              <small class="text-muted">点击每一项展开查看 1–5 分的具体标准</small>
+            </div>
+
+            <div class="score-advice">
+              <details open>
+                <summary><strong>一、健康（运动与身体状态）</strong></summary>
+                <div class="advice-body mt-2">
+                  <table class="table table-sm advice-table">
+                    <thead><tr><th style="width:60px">分数</th><th>具体标准</th></tr></thead>
+                    <tbody>
+                      <tr><td>5 分</td><td>本周运动 ≥3 次（中高强度或有效训练）；拉伸 ≥10 次；身体清爽无异味；精力充沛，日常活动不吃力</td></tr>
+                      <tr><td>4 分</td><td>本周运动 ≥3 次；拉伸 ≥5 次；偶尔疲劳但不影响正常生活</td></tr>
+                      <tr><td>3 分</td><td>本周运动 1 次；拉伸 ≥2 次；体力一般，容易久坐或懒散</td></tr>
+                      <tr><td>2 分</td><td>基本不运动、不拉伸；明显疲惫；出现轻微生病或不适</td></tr>
+                      <tr><td>1 分</td><td>长期不运动；身体状态差，常感不适或生病</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+
+              <details>
+                <summary><strong>二、内核（精神与觉察力）</strong></summary>
+                <div class="advice-body mt-2">
+                  <table class="table table-sm advice-table">
+                    <thead><tr><th>分数</th><th>具体标准</th></tr></thead>
+                    <tbody>
+                      <tr><td>5 分</td><td>每天冥想 ≥20 分钟；情绪稳定；能清晰觉察念头而不被牵着走</td></tr>
+                      <tr><td>4 分</td><td>每天冥想 10–20 分钟；情绪偶有波动但能自我调节</td></tr>
+                      <tr><td>3 分</td><td>本周冥想总时长 ≥40 分钟；经常被情绪或杂念牵着走</td></tr>
+                      <tr><td>2 分</td><td>冥想总时长 <20 分钟；情绪起伏大、容易烦躁</td></tr>
+                      <tr><td>1 分</td><td>完全没有内在练习；长期焦虑、混乱、失控感强</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+
+              <details>
+                <summary><strong>三、睡眠（恢复质量）</strong></summary>
+                <div class="advice-body mt-2">
+                  <table class="table table-sm advice-table">
+                    <thead><tr><th>分数</th><th>具体标准</th></tr></thead>
+                    <tbody>
+                      <tr><td>5 分</td><td>每天睡眠 ≥8 小时；醒来精神饱满；不依赖咖啡或刺激物</td></tr>
+                      <tr><td>4 分</td><td>睡眠 7–8 小时；白天偶尔犯困</td></tr>
+                      <tr><td>3 分</td><td>睡眠 6–7 小时；精神一般；需要咖啡提神</td></tr>
+                      <tr><td>2 分</td><td>睡眠 <6 小时；白天明显疲惫；身体轻微不适</td></tr>
+                      <tr><td>1 分</td><td>长期熬夜或失眠；精神萎靡；头痛或肩颈疼痛明显</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+
+              <details>
+                <summary><strong>四、饮食（营养与克制）</strong></summary>
+                <div class="advice-body mt-2">
+                  <table class="table table-sm advice-table">
+                    <thead><tr><th>分数</th><th>具体标准</th></tr></thead>
+                    <tbody>
+                      <tr><td>5 分</td><td>每天蔬果 500–600g；每餐约 7 分饱；以干净天然食物为主</td></tr>
+                      <tr><td>4 分</td><td>每天蔬果 ≥400g；偶尔外食或吃多；加工食品较少</td></tr>
+                      <tr><td>3 分</td><td>蔬果摄入不足；暴食 ≥1 次</td></tr>
+                      <tr><td>2 分</td><td>蔬果明显不足；高油高糖高加工饮食频繁；暴食 ≥2 次</td></tr>
+                      <tr><td>1 分</td><td>几乎不吃蔬果；高油高糖高加工为主；暴食 ≥3 次；身体不适或体味明显</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+
+              <details>
+                <summary><strong>五、目标（执行力）</strong></summary>
+                <div class="advice-body mt-2">
+                  <table class="table table-sm advice-table">
+                    <thead><tr><th>分数</th><th>具体标准</th></tr></thead>
+                    <tbody>
+                      <tr><td>5 分</td><td>周目标完成率 100%</td></tr>
+                      <tr><td>4 分</td><td>完成率 ≥80%；轻微拖延但不影响结果</td></tr>
+                      <tr><td>3 分</td><td>完成率 ≥60%；部分目标未完成</td></tr>
+                      <tr><td>2 分</td><td>完成率 ≥30%；执行力明显不足</td></tr>
+                      <tr><td>1 分</td><td>完成率 <30%；基本放弃计划</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="card-section">
+          <h4>③ 提醒事项</h4>
+          <ul id="remindersList"></ul>
+
+          <div class="d-flex flex-column mt-2 gap-2">
+            <input type="text" id="newReminderTitle" class="form-control" placeholder="提醒事项">
+            <div class="d-flex gap-2">
+              <input type="number" id="newReminderInterval" class="form-control" placeholder="间隔值">
+              <select id="newReminderUnit" class="form-select w-auto">
+                <option value="day">天</option>
+                <option value="week">周</option>
+                <option value="month">月</option>
+                <option value="year">年</option>
+              </select>
+              <button class="btn btn-pink" id="addReminderBtn">添加</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 底部导航：跳转到管理页面 -->
+  <div class="container text-center my-3">
+    <a href="admin.html" class="btn btn-outline-primary btn-sm">进入 管理页面</a>
+  </div>
+
+  <script>
+const SUPABASE_URL = 'https://daraqvkuzmgsvtwtahom.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhcmFxdmt1em1nc3Z0d3RhaG9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4OTI2ODUsImV4cCI6MjA4MTQ2ODY4NX0.1qYG91KhDNVj2n3ageDFlkZUh5nfyY6tycKdA3g00D0';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const radarCtx = document.getElementById('radarChart').getContext('2d');
+let radarChart;
+
+function getWeekStart(date) {
+  const d = new Date(date);
+  // JS getDay(): 0=Sun,1=Mon... we want Monday as start
+  const day = d.getDay() === 0 ? 7 : d.getDay();
+  if (day !== 1) d.setDate(d.getDate() - (day - 1));
+  d.setHours(0,0,0,0);
+  return d;
+}
+function formatDateYYYYMMDD(d){
+  const y=d.getFullYear();
+  const m=(d.getMonth()+1).toString().padStart(2,'0');
+  const day=d.getDate().toString().padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+function updateRadar() {
+  const values = ['healthScore','coreScore','sleepScore','dietScore','goalScore'].map(k =>
+    Number(document.querySelector(`input[name="${k}"]:checked`)?.value || 0)
+  );
+  if (radarChart) radarChart.destroy();
+  radarChart = new Chart(radarCtx, {
+    type: 'radar',
+    data: { labels:['健康','内核','睡眠','饮食','目标'], datasets:[{label:'本周评分', data:values, backgroundColor:'rgba(255,182,193,0.3)', borderColor:'#ff69b4', borderWidth:2}] },
+    options: { scales:{r:{min:0,max:5,ticks:{display:false,stepSize:1},pointLabels:{display:true}}}, plugins:{legend:{display:false}} }
+  });
+}
+
+// Precompute current week start and next week's Monday
+const currentWeekStart = getWeekStart(new Date());
+const currentWeekStartStr = formatDateYYYYMMDD(currentWeekStart);
+const nextWeekStart = new Date(currentWeekStart);
+nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+const nextWeekStartStr = formatDateYYYYMMDD(nextWeekStart);
+
+// ===== 周评分 =====
+async function loadWeeklyScore() {
+  const weekStart = currentWeekStartStr;
+  const { data } = await supabaseClient
+    .from('weekly_scores')
+    .select('*')
+    .eq('week_start', weekStart)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+  if (data) ['healthScore','coreScore','sleepScore','dietScore','goalScore'].forEach(k =>
+    document.querySelector(`input[name="${k}"][value="${data[k.replace('Score','_score')]}"]`)?.click()
+  );
+  updateRadar();
+  await populateWeekSelect();
+}
+
+async function populateWeekSelect() {
+  const { data } = await supabaseClient.from('weekly_scores').select('week_start').order('week_start',{ascending:false});
+  const select = document.getElementById('weekSelect'); select.innerHTML = '';
+  data?.forEach(d => { const option=document.createElement('option'); option.value=d.week_start; option.textContent=d.week_start; select.appendChild(option); });
+}
+
+// ===== 目标 =====
+// 支持按 period 和可选的 target_week_start 过滤（week 类型时按 target_week_start 区分本周/下周）
+async function loadGoals(period, containerId, weekStart=null){
+  try {
+    let query = supabaseClient.from('goals').select('*').eq('period', period);
+    if (period === 'week' && weekStart) {
+      // target_week_start 是 date 类型，传入 'YYYY-MM-DD' 即可
+      query = query.eq('target_week_start', weekStart);
+    }
+    const { data, error } = await query.order('id', { ascending: true });
+    if (error) { console.error('loadGoals error', error); return; }
+
+    const ul = document.getElementById(containerId); ul.innerHTML='';
+    data?.forEach(g=>{
+      const li=document.createElement('li');
+      li.className='list-group-item d-flex justify-content-between align-items-center';
+
+      // 左侧：标题 + （如果有）所属周显示
+      const left = document.createElement('div');
+      left.innerHTML = `<div><strong>${escapeHtml(g.title)}</strong></div>`;
+      if (g.target_week_start) {
+        left.innerHTML += `<div class="text-muted" style="font-size:0.85rem">所属周 ${g.target_week_start}</div>`;
+      }
+      li.appendChild(left);
+
+      // 删除按钮（非 longterm）
+      if(period !== 'longterm'){
+        const delBtn=document.createElement('button'); delBtn.className='btn btn-sm btn-danger'; delBtn.textContent='删除';
+        delBtn.addEventListener('click', async()=>{
+          await supabaseClient.from('goals').delete().eq('id', g.id);
+          // 重新加载当前容器对应的数据（传回同样的 weekStart）
+          await loadGoals(period, containerId, weekStart);
+        });
+        li.appendChild(delBtn);
+      }
+      ul.appendChild(li);
+    });
+  } catch (err) {
+    console.error('unexpected loadGoals error', err);
+  }
+}
+
+// 简单转义，防止 title 中包含 HTML（可替换为更健壮的库）
+function escapeHtml(str){
+  if(!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+// 添加“下周目标”：插入时把 target_week_start 设置为 nextWeekStartStr
+document.getElementById('addNextWeekGoalBtn').addEventListener('click', async()=>{
+  const title=document.getElementById('newNextWeekGoal').value.trim(); if(!title) return;
+  const payload = {
+    title,
+    period: 'week',
+    target_week_start: nextWeekStartStr
+  };
+  const { error } = await supabaseClient.from('goals').insert(payload);
+  if (error) { console.error('insert goal error', error); return; }
+  document.getElementById('newNextWeekGoal').value='';
+  await loadGoals('week','nextWeekGoals', nextWeekStartStr);
+});
+
+// ===== 提醒事项 =====
+function calculateNextDate(lastDateStr, interval, unit){
+  const last=new Date(lastDateStr);
+  const next=new Date(last);
+  if(unit==='day') next.setDate(last.getDate()+interval);
+  else if(unit==='week') next.setDate(last.getDate()+interval*7);
+  else if(unit==='month') next.setMonth(last.getMonth()+interval);
+  else if(unit==='year') next.setFullYear(last.getFullYear()+interval);
+  return next;
+}
+
+function formatDistance(date){
+  const today=new Date(); 
+  const diffDays=Math.ceil((date-today)/(1000*60*60*24));
+  if(diffDays===0) return '今天';
+  else if(diffDays>0) return `剩${diffDays}天`;
+  else return `已过${-diffDays}天`;
+}
+
+async function loadReminders(){
+  const { data } = await supabaseClient.from('life_reminders').select('*').order('next_due_date',{ascending:true});
+  const ul=document.getElementById('remindersList'); ul.innerHTML='';
+  data?.forEach(r=>{
+    const nextDate= new Date(r.next_due_date);
+    const li=document.createElement('li');
+    const info=document.createElement('div');
+    info.innerHTML=`<span>${escapeHtml(r.title)}</span> <span>(${r.next_due_date})</span> <span>${formatDistance(nextDate)}</span>`;
+    const btn=document.createElement('button'); btn.className='btn btn-sm btn-pink'; btn.textContent='完成';
+    btn.addEventListener('click', async()=>{
+      const todayStr = new Date().toISOString().split('T')[0];
+      const updatedNext = calculateNextDate(todayStr, r.interval_value, r.interval_unit);
+      await supabaseClient.from('life_reminders').update({next_due_date: updatedNext.toISOString().split('T')[0]}).eq('id',r.id);
+      await loadReminders();
+    });
+    li.appendChild(info); li.appendChild(btn); ul.appendChild(li);
+  });
+}
+
+document.getElementById('addReminderBtn').addEventListener('click', async()=>{
+  const title=document.getElementById('newReminderTitle').value.trim();
+  const interval=parseInt(document.getElementById('newReminderInterval').value);
+  const unit=document.getElementById('newReminderUnit').value;
+  if(!title || isNaN(interval) || interval<=0) return;
+  const today=new Date().toISOString().split('T')[0];
+  await supabaseClient.from('life_reminders').insert({title, interval_value:interval, interval_unit:unit, next_due_date: today});
+  document.getElementById('newReminderTitle').value=''; document.getElementById('newReminderInterval').value='';
+  await loadReminders();
+});
+
+// ===== 初始化 =====
+async function init(){
+  // 把 header 和下周目标输入 placeholder 更新为基于今天计算的周一日期
+  document.getElementById('weekHeader').textContent = `本周（Week ${currentWeekStartStr}）`;
+  document.getElementById('newNextWeekGoal').placeholder = `+ 添加下周目标（下周一 ${nextWeekStartStr}）`;
+
+  await loadWeeklyScore();
+  // 加载本周/下周目标：使用 target_week_start 作精确筛选
+  await loadGoals('week','currentWeekGoals', currentWeekStartStr);
+  await loadGoals('week','nextWeekGoals', nextWeekStartStr);
+  await loadGoals('longterm','longTermGoals');
+  await loadReminders();
+}
+init();
+  </script>
+
+  <style>
+    body { background: #f9f9f9; font-family: "Segoe UI", sans-serif; margin: 0; }
+    /* 统一使用粉色头部 (和 admin.html 保持一致) */
+    .header { background: #ffeef3; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .card-section { background: #fff; padding: 20px; border-radius: 8px; height: 100%; transition: height 0.3s ease; overflow: hidden; }
+    .btn-pink { background-color: #ffb6c1; color: #fff; border: none; }
+    .btn-pink:hover { background-color: #ff9fb8; color: #fff; }
+    .score-wrapper { max-width: 420px; margin: 0 auto; }
+    .score-group { margin: 18px 0; }
+    .score-title { font-weight: 600; margin-bottom: 6px; }
+    .score-options { display: flex; justify-content: center; gap: 12px; }
+    .score-options label { padding: 6px 12px; border-radius: 8px; cursor: pointer; background: #f2f2f2; min-width: 40px; text-align: center; user-select: none; }
+    .score-options input { display: none; }
+    .score-options label:has(input:checked) { background: #ffb6c1; color: #fff; }
+    .card-section h4 { text-align: left; }
+
+    /* 提醒事项卡片列表 */
+    #remindersList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 0.85rem;
+    }
+    #remindersList li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      margin-bottom: 4px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    #remindersList li span { margin-right: 8px; }
+    #remindersList li button { padding: 2px 6px; font-size: 0.75rem; }
+
+    /* 评分建议样式 */
+    .score-advice details { border-left: 3px solid #ffdce0; background:#fff7f8; padding:10px 12px; border-radius:6px; margin-bottom:8px; }
+    .score-advice summary { cursor: pointer; font-size: 0.95rem; outline: none; }
+    .score-advice .advice-body { padding-left: 6px; }
+    .advice-table td, .advice-table th { vertical-align: middle; }
+    .advice-table tbody tr:nth-child(odd) { background: rgba(255,192,203,0.06); }
+    .advice-intro { font-size: 0.82rem; color: #666; }
+
+    /* advice 内容区域滚动条设置（添加滚动条） */
+    .advice-content {
+      max-height: 360px;      /* 根据需要调整高度 */
+      overflow-y: auto;
+      padding-right: 8px;     /* 给滚动条留点内边距，防止内容被遮挡 */
+    }
+    /* 简单美化滚动条（Webkit 浏览器） */
+    .advice-content::-webkit-scrollbar { width: 10px; }
+    .advice-content::-webkit-scrollbar-track { background: transparent; }
+    .advice-content::-webkit-scrollbar-thumb { background: rgba(255,182,193,0.5); border-radius: 6px; }
+    .advice-content::-webkit-scrollbar-thumb:hover { background: rgba(255,182,193,0.8); }
+
+    /* 细节：让 details 的 summary 前面的默认箭头更柔和 */
+    .score-advice summary::-webkit-details-marker { color: #ff7b9a; font-size: 1.05em; }
+
+    /* 底部导航 */
+    .container .btn-outline-primary { border-color:#ffb6c1; color:#ff4d7a; }
+    .container .btn-outline-primary:hover { background:#ffb6c1; color:#fff; border-color:#ffb6c1; }
+
+    /* 小屏优化（避免表格挤压） */
+    @media (max-width: 575px) {
+      .advice-table td:nth-child(1), .advice-table th:nth-child(1) { width: 48px; white-space:nowrap; }
+      .score-wrapper { max-width: 100%; padding: 0 8px; }
+      .advice-content { max-height: 280px; }
+    }
+  </style>
+</body>
+</html>
