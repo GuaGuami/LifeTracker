@@ -43,6 +43,27 @@
 
         <div class="card-section">
           <h4>④ 长期目标</h4>
+
+          <!-- 筛选控件（周期 & 状态） -->
+          <div class="d-flex gap-2 mb-2 align-items-center">
+            <select id="goalsPeriodFilter" class="form-select form-select-sm w-auto">
+              <option value="all">全部周期</option>
+              <option value="week">周目标</option>
+              <option value="month">月目标</option>
+              <option value="year">年目标</option>
+              <option value="longterm">长期</option>
+            </select>
+
+            <select id="goalsStatusFilter" class="form-select form-select-sm w-auto">
+              <option value="all">全部状态</option>
+              <option value="pending">pending</option>
+              <option value="achieved">achieved</option>
+              <option value="failed">failed</option>
+            </select>
+
+            <button id="refreshLongGoalsBtn" class="btn btn-sm btn-outline-secondary">刷新</button>
+          </div>
+
           <ul id="longTermGoals" class="list-group"></ul>
         </div>
       </div>
@@ -118,12 +139,10 @@
       <!-- 右侧建议 + 提醒事项 -->
       <div class="col-12 col-lg-3 d-flex flex-column gap-3">
         <div class="card-section" id="adviceCard">
-          <!-- 大标题不再可折叠（移除折叠按钮），保持固定展示 -->
           <div class="d-flex align-items-center" id="adviceHeader">
             <h4 class="mb-0">⑤ 评分建议</h4>
           </div>
 
-          <!-- 新增类 .advice-content 提供滚动条（超出高度时可滚动） -->
           <div id="adviceContent" class="advice-content" style="margin-top:10px;">
             <div class="advice-intro mb-2">
               <small class="text-muted">点击每一项展开查看 1–5 分的具体标准</small>
@@ -145,71 +164,6 @@
                   </table>
                 </div>
               </details>
-
-              <details>
-                <summary><strong>二、内核（精神与觉察力）</strong></summary>
-                <div class="advice-body mt-2">
-                  <table class="table table-sm advice-table">
-                    <thead><tr><th>分数</th><th>具体标准</th></tr></thead>
-                    <tbody>
-                      <tr><td>5 分</td><td>每天冥想 ≥20 分钟；情绪稳定；能清晰觉察念头而不被牵着走</td></tr>
-                      <tr><td>4 分</td><td>每天冥想 10–20 分钟；情绪偶有波动但能自我调节</td></tr>
-                      <tr><td>3 分</td><td>本周冥想总时长 ≥40 分钟；经常被情绪或杂念牵着走</td></tr>
-                      <tr><td>2 分</td><td>冥想总时长 <20 分钟；情绪起伏大、容易烦躁</td></tr>
-                      <tr><td>1 分</td><td>完全没有内在练习；长期焦虑、混乱、失控感强</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-              </details>
-
-              <details>
-                <summary><strong>三、睡眠（恢复质量）</strong></summary>
-                <div class="advice-body mt-2">
-                  <table class="table table-sm advice-table">
-                    <thead><tr><th>分数</th><th>具体标准</th></tr></thead>
-                    <tbody>
-                      <tr><td>5 分</td><td>每天睡眠 ≥8 小时；醒来精神饱满；不依赖咖啡或刺激物</td></tr>
-                      <tr><td>4 分</td><td>睡眠 7–8 小时；白天偶尔犯困</td></tr>
-                      <tr><td>3 分</td><td>睡眠 6–7 小时；精神一般；需要咖啡提神</td></tr>
-                      <tr><td>2 分</td><td>睡眠 <6 小时；白天明显疲惫；身体轻微不适</td></tr>
-                      <tr><td>1 分</td><td>长期熬夜或失眠；精神萎靡；头痛或肩颈疼痛明显</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-              </details>
-
-              <details>
-                <summary><strong>四、饮食（营养与克制）</strong></summary>
-                <div class="advice-body mt-2">
-                  <table class="table table-sm advice-table">
-                    <thead><tr><th>分数</th><th>具体标准</th></tr></thead>
-                    <tbody>
-                      <tr><td>5 分</td><td>每天蔬果 500–600g；每餐约 7 分饱；以干净天然食物为主</td></tr>
-                      <tr><td>4 分</td><td>每天蔬果 ≥400g；偶尔外食或吃多；加工食品较少</td></tr>
-                      <tr><td>3 分</td><td>蔬果摄入不足；暴食 ≥1 次</td></tr>
-                      <tr><td>2 分</td><td>蔬果明显不足；高油高糖高加工饮食频繁；暴食 ≥2 次</td></tr>
-                      <tr><td>1 分</td><td>几乎不吃蔬果；高油高糖高加工为主；暴食 ≥3 次；身体不适或体味明显</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-              </details>
-
-              <details>
-                <summary><strong>五、目标（执行力）</strong></summary>
-                <div class="advice-body mt-2">
-                  <table class="table table-sm advice-table">
-                    <thead><tr><th>分数</th><th>具体标准</th></tr></thead>
-                    <tbody>
-                      <tr><td>5 分</td><td>周目标完成率 100%</td></tr>
-                      <tr><td>4 分</td><td>完成率 ≥80%；轻微拖延但不影响结果</td></tr>
-                      <tr><td>3 分</td><td>完成率 ≥60%；部分目标未完成</td></tr>
-                      <tr><td>2 分</td><td>完成率 ≥30%；执行力明显不足</td></tr>
-                      <tr><td>1 分</td><td>完成率 <30%；基本放弃计划</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-              </details>
-
             </div>
           </div>
         </div>
@@ -237,21 +191,42 @@
     </div>
   </div>
 
+  <!-- 长期目标详情 Modal -->
+  <div id="goalDetailModal" class="custom-modal" aria-hidden="true">
+    <div class="custom-modal-backdrop"></div>
+    <div class="custom-modal-dialog">
+      <div class="custom-modal-header">
+        <h5 id="goalDetailTitle">目标详情</h5>
+        <button id="closeGoalDetailBtn" class="btn-close"></button>
+      </div>
+      <div class="custom-modal-body">
+        <div><strong>目标日期：</strong><span id="goalDetailDate"></span></div>
+        <hr>
+        <div id="goalDetailDescription" style="white-space:pre-wrap;"></div>
+      </div>
+      <div class="custom-modal-footer">
+        <button id="closeGoalDetailOkBtn" class="btn btn-outline-secondary">关闭</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 底部导航：跳转到管理页面 -->
   <div class="container text-center my-3">
     <a href="admin.html" class="btn btn-outline-primary btn-sm">进入 管理页面</a>
   </div>
 
   <script>
+/* ================= Configuration ================= */
 const SUPABASE_URL = 'https://daraqvkuzmgsvtwtahom.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhcmFxdmt1em1nc3Z0d3RhaG9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4OTI2ODUsImV4cCI6MjA4MTQ2ODY4NX0.1qYG91KhDNVj2n3ageDFlkZUh5nfyY6tycKdA3g00D0';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const radarCtx = document.getElementById('radarChart').getContext('2d');
 let radarChart;
 
+/* =============== Date helpers =============== */
 function getWeekStart(date) {
   const d = new Date(date);
-  // JS getDay(): 0=Sun,1=Mon... we want Monday as start
   const day = d.getDay() === 0 ? 7 : d.getDay();
   if (day !== 1) d.setDate(d.getDate() - (day - 1));
   d.setHours(0,0,0,0);
@@ -264,6 +239,7 @@ function formatDateYYYYMMDD(d){
   return `${y}-${m}-${day}`;
 }
 
+/* =============== Radar chart =============== */
 function updateRadar() {
   const values = ['healthScore','coreScore','sleepScore','dietScore','goalScore'].map(k =>
     Number(document.querySelector(`input[name="${k}"]:checked`)?.value || 0)
@@ -276,43 +252,153 @@ function updateRadar() {
   });
 }
 
-// Precompute current week start and next week's Monday
+/* =============== Precomputed weeks =============== */
 const currentWeekStart = getWeekStart(new Date());
 const currentWeekStartStr = formatDateYYYYMMDD(currentWeekStart);
 const nextWeekStart = new Date(currentWeekStart);
 nextWeekStart.setDate(nextWeekStart.getDate() + 7);
 const nextWeekStartStr = formatDateYYYYMMDD(nextWeekStart);
 
-// ===== 周评分 =====
-async function loadWeeklyScore() {
-  const weekStart = currentWeekStartStr;
-  const { data } = await supabaseClient
-    .from('weekly_scores')
-    .select('*')
-    .eq('week_start', weekStart)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
-  if (data) ['healthScore','coreScore','sleepScore','dietScore','goalScore'].forEach(k =>
-    document.querySelector(`input[name="${k}"][value="${data[k.replace('Score','_score')]}"]`)?.click()
-  );
-  updateRadar();
-  await populateWeekSelect();
+/* =============== Utility =============== */
+function escapeHtml(str){
+  if(!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+/* =============== Weekly scores: load & save =============== */
+/*
+ - loadWeeklyScore(weekStart?): fetch maybeSingle() to avoid REST 406
+ - save: upsert with onConflict: 'week_start' (requires DB unique constraint on week_start)
+*/
+async function loadWeeklyScore(weekStart = currentWeekStartStr) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('weekly_scores')
+      .select('*')
+      .eq('week_start', weekStart)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('loadWeeklyScore error', error);
+      return;
+    }
+
+    // Clear selection first
+    ['healthScore','coreScore','sleepScore','dietScore','goalScore'].forEach(k => {
+      const checked = document.querySelector(`input[name="${k}"]:checked`);
+      if (checked) checked.checked = false;
+    });
+
+    if (data) {
+      // Support both snake_case and camelCase columns
+      const map = {
+        healthScore: data.health_score ?? data.healthScore,
+        coreScore: data.core_score ?? data.coreScore,
+        sleepScore: data.sleep_score ?? data.sleepScore,
+        dietScore: data.diet_score ?? data.dietScore,
+        goalScore: data.goal_score ?? data.goalScore
+      };
+      Object.entries(map).forEach(([k, v])=>{
+        if (v !== undefined && v !== null) {
+          const input = document.querySelector(`input[name="${k}"][value="${v}"]`);
+          if (input) input.checked = true;
+        }
+      });
+    }
+
+    updateRadar();
+    // ensure weekSelect shows the current loaded week
+    const weekSelect = document.getElementById('weekSelect');
+    if (weekSelect) {
+      if (![...weekSelect.options].some(opt => opt.value === weekStart)) {
+        const opt = document.createElement('option'); opt.value = weekStart; opt.textContent = weekStart;
+        weekSelect.insertBefore(opt, weekSelect.firstChild);
+      }
+      weekSelect.value = weekStart;
+    }
+
+  } catch (err) {
+    console.error('unexpected loadWeeklyScore error', err);
+  }
 }
 
 async function populateWeekSelect() {
-  const { data } = await supabaseClient.from('weekly_scores').select('week_start').order('week_start',{ascending:false});
-  const select = document.getElementById('weekSelect'); select.innerHTML = '';
-  data?.forEach(d => { const option=document.createElement('option'); option.value=d.week_start; option.textContent=d.week_start; select.appendChild(option); });
+  try {
+    const { data, error } = await supabaseClient.from('weekly_scores').select('week_start').order('week_start',{ascending:false});
+    if (error) { console.error('populateWeekSelect error', error); return; }
+    const select = document.getElementById('weekSelect'); select.innerHTML = '';
+    const seen = new Set();
+    data?.forEach(d => {
+      if (!seen.has(d.week_start)) {
+        seen.add(d.week_start);
+        const option=document.createElement('option');
+        option.value=d.week_start;
+        option.textContent=d.week_start;
+        select.appendChild(option);
+      }
+    });
+    // always ensure current week present & selected
+    if (!seen.has(currentWeekStartStr)) {
+      const opt = document.createElement('option'); opt.value = currentWeekStartStr; opt.textContent = currentWeekStartStr;
+      select.insertBefore(opt, select.firstChild);
+    }
+    select.value = currentWeekStartStr;
+  } catch (err) {
+    console.error('unexpected populateWeekSelect error', err);
+  }
 }
 
-// ===== 目标 =====
-// 支持按 period 和可选的 target_week_start 过滤（week 类型时按 target_week_start 区分本周/下周）
+document.getElementById('weeklyScoreForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const payload = {
+      week_start: document.getElementById('weekSelect').value || currentWeekStartStr,
+      health_score: Number(document.querySelector('input[name="healthScore"]:checked')?.value || 0),
+      core_score: Number(document.querySelector('input[name="coreScore"]:checked')?.value || 0),
+      sleep_score: Number(document.querySelector('input[name="sleepScore"]:checked')?.value || 0),
+      diet_score: Number(document.querySelector('input[name="dietScore"]:checked')?.value || 0),
+      goal_score: Number(document.querySelector('input[name="goalScore"]:checked')?.value || 0)
+    };
+
+    const total = payload.health_score + payload.core_score + payload.sleep_score + payload.diet_score + payload.goal_score;
+    if (total === 0) { alert('请先选择至少一项评分'); return; }
+
+    const { data, error } = await supabaseClient
+      .from('weekly_scores')
+      .upsert([payload], { onConflict: 'week_start' });
+
+    if (error) {
+      console.error('save weekly score error', error);
+      alert('保存失败：' + error.message);
+      return;
+    }
+
+    await populateWeekSelect();
+    await loadWeeklyScore(payload.week_start);
+    alert('保存成功');
+  } catch (err) {
+    console.error('unexpected save error', err);
+    alert('保存时出现错误，请查看控制台');
+  }
+});
+
+/* update radar on radio change */
+document.querySelectorAll('input[type="radio"]').forEach(r => r.addEventListener('change', updateRadar));
+
+/* when user selects different week from select -> load that week's score */
+document.getElementById('weekSelect').addEventListener('change', (e) => {
+  const w = e.target.value;
+  if (w) loadWeeklyScore(w);
+});
+
+/* =============== Goals (week/current/next) =============== */
 async function loadGoals(period, containerId, weekStart=null){
   try {
-    let query = supabaseClient.from('goals').select('*').eq('period', period);
+    let query = supabaseClient.from('goals').select('*');
+    if (period) query = query.eq('period', period);
     if (period === 'week' && weekStart) {
-      // target_week_start 是 date 类型，传入 'YYYY-MM-DD' 即可
       query = query.eq('target_week_start', weekStart);
     }
     const { data, error } = await query.order('id', { ascending: true });
@@ -323,7 +409,6 @@ async function loadGoals(period, containerId, weekStart=null){
       const li=document.createElement('li');
       li.className='list-group-item d-flex justify-content-between align-items-center';
 
-      // 左侧：标题 + （如果有）所属周显示
       const left = document.createElement('div');
       left.innerHTML = `<div><strong>${escapeHtml(g.title)}</strong></div>`;
       if (g.target_week_start) {
@@ -331,12 +416,10 @@ async function loadGoals(period, containerId, weekStart=null){
       }
       li.appendChild(left);
 
-      // 删除按钮（非 longterm）
       if(period !== 'longterm'){
         const delBtn=document.createElement('button'); delBtn.className='btn btn-sm btn-danger'; delBtn.textContent='删除';
         delBtn.addEventListener('click', async()=>{
           await supabaseClient.from('goals').delete().eq('id', g.id);
-          // 重新加载当前容器对应的数据（传回同样的 weekStart）
           await loadGoals(period, containerId, weekStart);
         });
         li.appendChild(delBtn);
@@ -348,13 +431,132 @@ async function loadGoals(period, containerId, weekStart=null){
   }
 }
 
-// 简单转义，防止 title 中包含 HTML（可替换为更健壮的库）
-function escapeHtml(str){
-  if(!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+/* =============== Long term goals: filter, render, inline edit, detail modal =============== */
+async function loadLongTermGoals(){
+  const periodFilter = document.getElementById('goalsPeriodFilter').value;
+  const statusFilter = document.getElementById('goalsStatusFilter').value;
+
+  try {
+    let query = supabaseClient.from('goals').select('*').order('id', { ascending: true });
+    if (periodFilter && periodFilter !== 'all') query = query.eq('period', periodFilter);
+    if (statusFilter && statusFilter !== 'all') query = query.eq('status', statusFilter);
+    const { data, error } = await query;
+    if (error) { console.error('loadLongTermGoals error', error); return; }
+
+    renderLongTermGoals(data || []);
+  } catch (err){
+    console.error('unexpected loadLongTermGoals', err);
+  }
 }
 
-// 添加“下周目标”：插入时把 target_week_start 设置为 nextWeekStartStr
+function renderLongTermGoals(items){
+  const ul = document.getElementById('longTermGoals'); ul.innerHTML = '';
+  if (!items.length){
+    const emptyLi = document.createElement('li');
+    emptyLi.className = 'list-group-item text-muted';
+    emptyLi.textContent = '暂无目标';
+    ul.appendChild(emptyLi);
+    return;
+  }
+
+  items.forEach(item=>{
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between align-items-start gap-2';
+    li.dataset.id = item.id;
+
+    const left = document.createElement('div'); left.style.flex = '1';
+    const targetDateDisplay = item.target_date ? ` • 目标日期 ${item.target_date}` : '';
+    left.innerHTML = `<div><strong class="goal-title">${escapeHtml(item.title)}</strong></div>
+                      <div class="text-muted small goal-meta">周期: ${escapeHtml(item.period || '')}${item.target_week_start ? ' • 所属周 ' + item.target_week_start : ''}${targetDateDisplay}</div>`;
+    li.appendChild(left);
+
+    const right = document.createElement('div'); right.className='d-flex gap-2 align-items-center';
+    // 状态：灰色外框风格
+    const statusBadge = document.createElement('span');
+    statusBadge.className = 'badge-outline-gray goal-status';
+    statusBadge.textContent = item.status || '';
+    right.appendChild(statusBadge);
+
+    // 详情按钮：粉色（打开详情 modal）
+    const detailBtn = document.createElement('button');
+    detailBtn.className = 'btn btn-sm btn-pink';
+    detailBtn.textContent = '详情';
+    detailBtn.addEventListener('click', ()=> showGoalDetail(item));
+    right.appendChild(detailBtn);
+
+    // 编辑按钮：灰色外框（白底灰字，hover -> 灰底白字），保持内联编辑行为
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-sm btn-outline-gray';
+    editBtn.textContent = '编辑';
+    editBtn.addEventListener('click', ()=> openInlineEditor(li, item));
+    right.appendChild(editBtn);
+
+    ul.appendChild(li);
+    li.appendChild(right);
+  });
+}
+
+function openInlineEditor(li, item){
+  li.innerHTML = '';
+  const form = document.createElement('div'); form.className = 'd-flex flex-column gap-2 w-100';
+
+  const row = document.createElement('div'); row.className = 'd-flex gap-2 align-items-start';
+  const input = document.createElement('input'); input.className='form-control form-control-sm'; input.value = item.title || '';
+  input.style.flex = '1';
+  row.appendChild(input);
+
+  const statusSelect = document.createElement('select'); statusSelect.className = 'form-select form-select-sm';
+  ['pending','achieved','failed'].forEach(s=>{
+    const opt = document.createElement('option'); opt.value = s; opt.textContent = s; if (item.status === s) opt.selected = true; statusSelect.appendChild(opt);
+  });
+  row.appendChild(statusSelect);
+
+  form.appendChild(row);
+
+  const row2 = document.createElement('div'); row2.className = 'd-flex gap-2 justify-content-end';
+  const saveBtn = document.createElement('button'); saveBtn.className = 'btn btn-sm btn-pink'; saveBtn.textContent = '保存';
+  const cancelBtn = document.createElement('button'); cancelBtn.className = 'btn btn-sm btn-outline-secondary'; cancelBtn.textContent = '取消';
+  row2.appendChild(cancelBtn); row2.appendChild(saveBtn);
+  form.appendChild(row2);
+
+  li.appendChild(form);
+
+  cancelBtn.addEventListener('click', ()=> {
+    loadLongTermGoals();
+  });
+
+  saveBtn.addEventListener('click', async ()=>{
+    const newTitle = input.value.trim();
+    const newStatus = statusSelect.value;
+    if (!newTitle) { alert('标题不能为空'); return; }
+    try {
+      const { error } = await supabaseClient.from('goals').update({ title: newTitle, status: newStatus }).eq('id', item.id);
+      if (error) { alert('更新失败: ' + error.message); console.error(error); return; }
+      await loadLongTermGoals();
+    } catch (err){
+      console.error('save inline error', err);
+    }
+  });
+}
+
+function showGoalDetail(item){
+  const modal = document.getElementById('goalDetailModal');
+  document.getElementById('goalDetailTitle').textContent = item.title || '目标详情';
+  document.getElementById('goalDetailDate').textContent = item.target_date || (item.target_week_start ? item.target_week_start : '无');
+  document.getElementById('goalDetailDescription').textContent = item.description || '（无描述）';
+  modal.setAttribute('aria-hidden', 'false');
+  modal.classList.add('open');
+}
+function hideGoalDetail(){
+  const modal = document.getElementById('goalDetailModal');
+  modal.setAttribute('aria-hidden', 'true');
+  modal.classList.remove('open');
+}
+document.getElementById('closeGoalDetailBtn').addEventListener('click', hideGoalDetail);
+document.getElementById('closeGoalDetailOkBtn').addEventListener('click', hideGoalDetail);
+document.querySelector('#goalDetailModal .custom-modal-backdrop').addEventListener('click', hideGoalDetail);
+
+/* =============== Next-week add goal =============== */
 document.getElementById('addNextWeekGoalBtn').addEventListener('click', async()=>{
   const title=document.getElementById('newNextWeekGoal').value.trim(); if(!title) return;
   const payload = {
@@ -368,7 +570,7 @@ document.getElementById('addNextWeekGoalBtn').addEventListener('click', async()=
   await loadGoals('week','nextWeekGoals', nextWeekStartStr);
 });
 
-// ===== 提醒事项 =====
+/* =============== Reminders =============== */
 function calculateNextDate(lastDateStr, interval, unit){
   const last=new Date(lastDateStr);
   const next=new Date(last);
@@ -380,7 +582,7 @@ function calculateNextDate(lastDateStr, interval, unit){
 }
 
 function formatDistance(date){
-  const today=new Date(); 
+  const today=new Date();
   const diffDays=Math.ceil((date-today)/(1000*60*60*24));
   if(diffDays===0) return '今天';
   else if(diffDays>0) return `剩${diffDays}天`;
@@ -417,29 +619,47 @@ document.getElementById('addReminderBtn').addEventListener('click', async()=>{
   await loadReminders();
 });
 
-// ===== 初始化 =====
+/* =============== Init =============== */
 async function init(){
-  // 把 header 和下周目标输入 placeholder 更新为基于今天计算的周一日期
   document.getElementById('weekHeader').textContent = `本周（Week ${currentWeekStartStr}）`;
   document.getElementById('newNextWeekGoal').placeholder = `+ 添加下周目标（下周一 ${nextWeekStartStr}）`;
 
+  await populateWeekSelect();
   await loadWeeklyScore();
-  // 加载本周/下周目标：使用 target_week_start 作精确筛选
   await loadGoals('week','currentWeekGoals', currentWeekStartStr);
   await loadGoals('week','nextWeekGoals', nextWeekStartStr);
-  await loadGoals('longterm','longTermGoals');
+
+  document.getElementById('goalsPeriodFilter').addEventListener('change', loadLongTermGoals);
+  document.getElementById('goalsStatusFilter').addEventListener('change', loadLongTermGoals);
+  document.getElementById('refreshLongGoalsBtn').addEventListener('click', loadLongTermGoals);
+  await loadLongTermGoals();
+
   await loadReminders();
 }
 init();
+
   </script>
 
   <style>
     body { background: #f9f9f9; font-family: "Segoe UI", sans-serif; margin: 0; }
-    /* 统一使用粉色头部 (和 admin.html 保持一致) */
     .header { background: #ffeef3; padding: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    .card-section { background: #fff; padding: 20px; border-radius: 8px; height: 100%; transition: height 0.3s ease; overflow: hidden; }
+    .card-section { background: #fff; padding: 20px; border-radius: 8px; height: 100%; transition: height 0.3s ease; overflow: visible; }
     .btn-pink { background-color: #ffb6c1; color: #fff; border: none; }
     .btn-pink:hover { background-color: #ff9fb8; color: #fff; }
+
+    /* 新增：通用灰色外框按钮（白底、灰字、灰边；hover -> 灰底白字） */
+    .btn-outline-gray {
+      color: #6c757d;
+      background-color: #fff;
+      border: 1px solid #ced4da;
+      box-shadow: none;
+    }
+    .btn-outline-gray:hover, .btn-outline-gray:focus {
+      color: #fff;
+      background-color: #6c757d;
+      border-color: #6c757d;
+    }
+
     .score-wrapper { max-width: 420px; margin: 0 auto; }
     .score-group { margin: 18px 0; }
     .score-title { font-weight: 600; margin-bottom: 6px; }
@@ -449,27 +669,39 @@ init();
     .score-options label:has(input:checked) { background: #ffb6c1; color: #fff; }
     .card-section h4 { text-align: left; }
 
-    /* 提醒事项卡片列表 */
-    #remindersList {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      font-size: 0.85rem;
-    }
-    #remindersList li {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 6px 10px;
-      margin-bottom: 4px;
-      background: #f9f9f9;
-      border-radius: 6px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
+    /* 目标与提醒滚动（统一风格） */
+    #remindersList { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; max-height: 220px; overflow-y: auto; }
+    #remindersList li { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; margin-bottom: 4px; background: #f9f9f9; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
     #remindersList li span { margin-right: 8px; }
     #remindersList li button { padding: 2px 6px; font-size: 0.75rem; }
 
-    /* 评分建议样式 */
+    /* 长期目标列表样式 */
+    #longTermGoals { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; max-height: 220px; overflow-y: auto; }
+    #longTermGoals li { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; margin-bottom: 4px; background: #f9f9f9; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    #longTermGoals li .goal-meta { margin-top: 4px; color: #6c757d; font-size: 0.82rem; }
+    #longTermGoals li .goal-status { display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+
+    /* 新增：灰色外框徽章（白底、灰字、灰边；hover -> 灰底白字） */
+    .badge-outline-gray {
+      color: #6c757d;
+      background-color: #fff;
+      border: 1px solid #ced4da;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.375rem;
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.75rem;
+    }
+    .badge-outline-gray:hover {
+      color: #fff;
+      background-color: #6c757d;
+      border-color: #6c757d;
+      cursor: default;
+    }
+
+    #currentWeekGoals, #nextWeekGoals { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; }
+    #currentWeekGoals li, #nextWeekGoals li { padding: 8px 10px; margin-bottom: 6px; background: #f8f8f8; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+
     .score-advice details { border-left: 3px solid #ffdce0; background:#fff7f8; padding:10px 12px; border-radius:6px; margin-bottom:8px; }
     .score-advice summary { cursor: pointer; font-size: 0.95rem; outline: none; }
     .score-advice .advice-body { padding-left: 6px; }
@@ -477,30 +709,34 @@ init();
     .advice-table tbody tr:nth-child(odd) { background: rgba(255,192,203,0.06); }
     .advice-intro { font-size: 0.82rem; color: #666; }
 
-    /* advice 内容区域滚动条设置（添加滚动条） */
-    .advice-content {
-      max-height: 360px;      /* 根据需要调整高度 */
-      overflow-y: auto;
-      padding-right: 8px;     /* 给滚动条留点内边距，防止内容被遮挡 */
-    }
-    /* 简单美化滚动条（Webkit 浏览器） */
-    .advice-content::-webkit-scrollbar { width: 10px; }
-    .advice-content::-webkit-scrollbar-track { background: transparent; }
-    .advice-content::-webkit-scrollbar-thumb { background: rgba(255,182,193,0.5); border-radius: 6px; }
-    .advice-content::-webkit-scrollbar-thumb:hover { background: rgba(255,182,193,0.8); }
+    .advice-content { max-height: 360px; overflow-y: auto; padding-right: 8px; }
 
-    /* 细节：让 details 的 summary 前面的默认箭头更柔和 */
+    /* 自定义 Modal 样式（简单） */
+    .custom-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1200; }
+    .custom-modal.open { display: flex; }
+    .custom-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.35); }
+    .custom-modal-dialog { position: relative; background: #fff; width: min(720px, 94%); border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,0.2); z-index: 2; overflow: hidden; }
+    .custom-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #eee; }
+    .custom-modal-body { padding: 16px; max-height: 60vh; overflow:auto; }
+    .custom-modal-footer { padding: 12px 16px; border-top: 1px solid #eee; text-align: right; }
+    .custom-modal .btn-close { border: none; background: transparent; font-size: 1rem; }
+
+    /* 滚动条美化（WebKit） */
+    #currentWeekGoals::-webkit-scrollbar, #nextWeekGoals::-webkit-scrollbar, #longTermGoals::-webkit-scrollbar, #remindersList::-webkit-scrollbar, .advice-content::-webkit-scrollbar { width: 10px; }
+    #currentWeekGoals::-webkit-scrollbar-thumb, #nextWeekGoals::-webkit-scrollbar-thumb, #longTermGoals::-webkit-scrollbar-thumb, #remindersList::-webkit-scrollbar-thumb, .advice-content::-webkit-scrollbar-thumb { background: rgba(255,182,193,0.5); border-radius: 6px; }
+    #currentWeekGoals::-webkit-scrollbar-thumb:hover, #nextWeekGoals::-webkit-scrollbar-thumb:hover, #longTermGoals::-webkit-scrollbar-thumb:hover, #remindersList::-webkit-scrollbar-thumb:hover, .advice-content::-webkit-scrollbar-thumb:hover { background: rgba(255,182,193,0.8); }
+
     .score-advice summary::-webkit-details-marker { color: #ff7b9a; font-size: 1.05em; }
 
-    /* 底部导航 */
     .container .btn-outline-primary { border-color:#ffb6c1; color:#ff4d7a; }
     .container .btn-outline-primary:hover { background:#ffb6c1; color:#fff; border-color:#ffb6c1; }
 
-    /* 小屏优化（避免表格挤压） */
     @media (max-width: 575px) {
       .advice-table td:nth-child(1), .advice-table th:nth-child(1) { width: 48px; white-space:nowrap; }
       .score-wrapper { max-width: 100%; padding: 0 8px; }
       .advice-content { max-height: 280px; }
+      #currentWeekGoals, #nextWeekGoals, #longTermGoals { max-height: 140px; }
+      #remindersList { max-height: 140px; }
     }
   </style>
 </body>
